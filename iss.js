@@ -36,6 +36,10 @@ const fetchMyIP = function(callback) {
  *     { latitude: '49.27670', longitude: '-123.13000' }
  */
 const fetchCoordsByIP = function(ip, callback) {
+  if (typeof ip !== "string") {
+    console.log("INVALID IP");
+    return;
+  }
   request(`http://ipwho.is/${ip}`, (error,response,body) => {
     if (error) {
       callback(error, null);
@@ -70,6 +74,10 @@ const fetchCoordsByIP = function(ip, callback) {
  *     [ { risetime: 134564234, duration: 600 }, ... ]
  */
 const fetchISSFlyOverTimes = function(coords, callback) {
+  if (!coords.latitude || !coords.longitude) {
+    console.log('Invalid coordinates');
+    return;
+  }
   request(`https://iss-flyover.herokuapp.com/json/?lat=${coords.latitude}&lon=${coords.longitude}`, (error, response, body) => {
     if (error) {
       callback(error, null);
@@ -85,9 +93,40 @@ const fetchISSFlyOverTimes = function(coords, callback) {
     return;
   });
 };
+/**
+ * Orchestrates multiple API requests in order to determine the next 5 upcoming ISS fly overs for the user's current location.
+ * Input:
+ *   - A callback with an error or results. 
+ * Returns (via Callback):
+ *   - An error, if any (nullable)
+ *   - The fly-over times as an array (null if error):
+ *     [ { risetime: <number>, duration: <number> }, ... ]
+ */ 
+const nextISSTimesForMyLocation = function(callback) {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+    console.log('It worked! Returned IP:' , ip);
+    fetchCoordsByIP(ip, (error, data) => {
+      if (error) {
+        callback(error, null);
+        return;
+      }
+      console.log("It worked! Returned coordinates:", data);
+      fetchISSFlyOverTimes(data, (error, passTimes) => {
+        if (error) {
+          callback(error, null);
+          return;
+        }
+        callback(null, passTimes);
+      });
+    });
+  });
+}
 
-
-module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes };
+module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes, nextISSTimesForMyLocation };
 
 
 
