@@ -36,10 +36,6 @@ const fetchMyIP = function(callback) {
  *     { latitude: '49.27670', longitude: '-123.13000' }
  */
 const fetchCoordsByIP = function(ip, callback) {
-  if (typeof ip !== "string") {
-    console.log("INVALID IP");
-    return;
-  }
   request(`http://ipwho.is/${ip}`, (error,response,body) => {
     if (error) {
       callback(error, null);
@@ -108,13 +104,11 @@ const nextISSTimesForMyLocation = function(callback) {
       callback(error, null);
       return;
     }
-    console.log('It worked! Returned IP:' , ip);
     fetchCoordsByIP(ip, (error, data) => {
       if (error) {
         callback(error, null);
         return;
       }
-      console.log("It worked! Returned coordinates:", data);
       fetchISSFlyOverTimes(data, (error, passTimes) => {
         if (error) {
           callback(error, null);
